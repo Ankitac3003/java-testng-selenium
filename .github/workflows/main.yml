@@ -1,0 +1,38 @@
+name: Run Selenium Tests
+
+on:
+  push:
+    branches:
+      - master  # Runs on push to master
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Runs on Linux machine
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3  # Pulls the latest code
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'  # Use Temurin (AdoptOpenJDK)
+          java-version: '17'       # Change if using a different version
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build and Run Tests
+        run: mvn clean test  # Runs TestNG Selenium tests
+
+      - name: Upload TestNG Reports
+        if: always()  # Always upload reports, even if tests fail
+        uses: actions/upload-artifact@v3
+        with:
+          name: testng-reports
+          path: target/surefire-reports/  # TestNG stores reports here
